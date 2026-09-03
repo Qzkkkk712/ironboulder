@@ -39,8 +39,9 @@ python3 server.py
 邮箱里的登录链接会跳回主页面，因此当前网页地址必须出现在 Supabase 的回调白名单里：
 
 1. 打开 Supabase Dashboard -> Authentication -> URL Configuration
-2. Site URL 填主页面地址，例如 `https://你的域名/fitness-climbing-strength-20260903.html`
+2. Site URL 填 `https://qzkkkk712.github.io/ironboulder/`
 3. Redirect URLs 至少添加：
+   - GitHub Pages：`https://qzkkkk712.github.io/ironboulder/**`
    - 当前正式网址，例如 `https://ethnic-gulf-sponsors-mounting.trycloudflare.com/fitness-climbing-strength-20260903.html`
    - 本机预览：`http://127.0.0.1:8765/**` 和 `http://localhost:8765/**`
 
