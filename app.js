@@ -290,9 +290,11 @@ async function applyUserSession(session) {
   $('#authLogout').hidden = false;
   setAuthScreen(false);
   setAuthMessage('');
-  if (sameUser) return;
-  await loadCloudState();
-  renderAll();
+  if (!sameUser) {
+    await loadCloudState();
+    renderAll();
+  }
+  ensureOnboarding();
 }
 
 function watchAuthState() {
@@ -318,9 +320,79 @@ function setAuthScreen(visible) {
   const screen = $('#authScreen');
   if (!screen) return;
   screen.hidden = !visible;
+  const onboarding = $('#onboardingScreen');
+  if (onboarding) onboarding.hidden = visible;
   document.querySelector('.topbar').style.display = visible ? 'none' : '';
   document.querySelector('main').style.display = visible ? 'none' : '';
   if (visible) resetAuthUI();
+}
+
+function profileIsReady() {
+  const p = state.profile;
+  return Boolean(
+    p.gender &&
+    numValue(p.age) > 0 &&
+    numValue(p.height) > 0 &&
+    numValue(p.weight) > 0 &&
+    ACTIVITY_META[p.activity] &&
+    GOAL_META[p.goal]
+  );
+}
+
+function setOnboardingScreen(visible) {
+  const screen = $('#onboardingScreen');
+  if (!screen) return;
+  const auth = $('#authScreen');
+  if (auth) auth.hidden = visible;
+  screen.hidden = !visible;
+  document.querySelector('.topbar').style.display = visible ? 'none' : '';
+  document.querySelector('main').style.display = visible ? 'none' : '';
+  if (visible) {
+    const latest = weightTrendInfo().weight || numValue(state.profile.weight);
+    $('#onboardingGender').value = state.profile.gender || 'male';
+    $('#onboardingAge').value = state.profile.age || '';
+    $('#onboardingHeight').value = state.profile.height || '';
+    $('#onboardingWeight').value = latest || '';
+    $('#onboardingActivity').value = state.profile.activity || 'moderate';
+    $('#onboardingGoal').value = state.profile.goal || 'mild-fat-loss';
+    $('#onboardingMessage').textContent = '';
+  }
+}
+
+function ensureOnboarding() {
+  if (!currentUser) return;
+  if (!profileIsReady()) setOnboardingScreen(true);
+}
+
+function saveOnboardingProfile() {
+  const age = numValue($('#onboardingAge').value);
+  const height = numValue($('#onboardingHeight').value);
+  const weight = numValue($('#onboardingWeight').value);
+  const message = $('#onboardingMessage');
+  if (age <= 0 || age > 100 || height <= 0 || weight <= 0) {
+    message.textContent = '请填写有效的年龄、身高和体重';
+    return;
+  }
+  state.profile.gender = $('#onboardingGender').value;
+  state.profile.age = age;
+  state.profile.height = height;
+  state.profile.weight = weight;
+  state.profile.activity = $('#onboardingActivity').value;
+  state.profile.goal = $('#onboardingGoal').value;
+  if (state.weights.length === 0) {
+    state.weights.push({
+      id: 'w-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+      date: todayStr(),
+      weight,
+      week: state.selectedWeek,
+      note: '初始体重'
+    });
+  }
+  saveState();
+  setOnboardingScreen(false);
+  renderAll();
+  showView('home');
+  showToast('个人档案已保存');
 }
 
 function setAuthMessage(text) {
@@ -542,6 +614,7 @@ async function loadCloudState() {
     state = freshState();
   }
   renderAll();
+  ensureOnboarding();
   if (shouldPush) queueCloudSync();
 }
 
@@ -851,6 +924,14 @@ function weightTrendInfo() {
   };
 }
 
+function syncProfileWeightFromRecords() {
+  const sorted = state.weights.slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  if (sorted.length === 0) return;
+  const latest = sorted[sorted.length - 1];
+  const latestWeight = numValue(latest.weight);
+  if (latestWeight > 0) state.profile.weight = latestWeight;
+}
+
 function formatNumber(value) {
   return Math.round(value).toLocaleString('en-US');
 }
@@ -912,6 +993,18 @@ function renderDashboard() {
   if (phaseTag) {
     const phase = currentPhase();
     phaseTag.textContent = '第 ' + state.selectedWeek + ' 周 · ' + phase.label;
+  }
+  const bmiEl = $('#homeBmi');
+  if (bmiEl) {
+    const height = numValue(state.profile.height);
+    const weight = numValue(state.profile.weight);
+    if (height > 0 && weight > 0) {
+      const bmi = weight / Math.pow(height / 100, 2);
+      bmiEl.textContent = 'BMI ' + bmi.toFixed(1);
+      bmiEl.hidden = false;
+    } else {
+      bmiEl.hidden = true;
+    }
   }
   const todayHint = $('#startTodayHint');
   if (todayHint) {
@@ -1390,6 +1483,10 @@ function bindEvents() {
   $('#authRegisterLink').addEventListener('click', () => {
     window.location.href = 'register.html';
   });
+  $('#onboardingForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    saveOnboardingProfile();
+  });
   $('#savePassword').addEventListener('click', savePasswordAccount);
   $('#authLogout').addEventListener('click', signOutSupabase);
   $('#mobileView').addEventListener('click', () => {
@@ -1576,20 +1673,18 @@ function bindEvents() {
     });
     $('#weightValue').value = '';
     $('#weightNote').value = '';
+    syncProfileWeightFromRecords();
     saveState();
-    renderWeights();
-    renderWeightCheck();
-    renderDashboard();
+    renderAll();
     showToast('体重已保存');
   });
   $('#weightList').addEventListener('click', (event) => {
     const button = event.target.closest('[data-delete-weight]');
     if (!button) return;
     state.weights = state.weights.filter((weight) => weight.id !== button.dataset.deleteWeight);
+    syncProfileWeightFromRecords();
     saveState();
-    renderWeights();
-    renderWeightCheck();
-    renderDashboard();
+    renderAll();
   });
 
   $('#exerciseGrid').addEventListener('click', (event) => {

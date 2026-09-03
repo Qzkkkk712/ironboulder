@@ -1549,6 +1549,21 @@ body.mobile-mode #quickWeight {
   background: var(--card);
 }
 
+.onboarding-card {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.onboarding-card .profile-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.onboarding-card .btn {
+  min-height: 42px;
+  margin-top: 4px;
+}
+
 .auth-card h2 {
   margin: 4px 0 0;
   font-size: 20px;
@@ -1583,4 +1598,10 @@ body.mobile-mode #quickWeight {
 .auth-message {
   min-height: 20px;
   color: var(--amber) !important;
+}
+
+@media (max-width: 480px) {
+  .onboarding-card .profile-grid {
+    grid-template-columns: 1fr;
+  }
 }
