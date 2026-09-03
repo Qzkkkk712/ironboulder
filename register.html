@@ -4,34 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>注册 ironboulder</title>
-  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903k">
-  <link rel="stylesheet" href="styles.css?v=20260903k">
+  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903l">
+  <link rel="stylesheet" href="styles.css?v=20260903l">
 </head>
 <body>
   <div class="auth-screen">
     <form class="auth-card" id="registerForm" novalidate>
-      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903k" alt="ironboulder"></span>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903l" alt="ironboulder"></span>
       <h2>注册 ironboulder</h2>
-      <p>不需要设置密码，注册登录链接会发送到你的邮箱</p>
+      <p>可填写密码直接注册，也可用邮箱登录链接注册</p>
       <label class="field">
         <span>邮箱</span>
         <input type="email" id="registerEmail" name="email" autocomplete="email" placeholder="you@example.com">
       </label>
+      <label class="field">
+        <span>密码（可选）</span>
+        <input type="password" id="registerPassword" name="password" autocomplete="new-password" placeholder="填写后可直接用密码登录">
+      </label>
       <div class="auth-actions single">
-        <button class="btn" id="sendRegister" type="submit">发送注册链接</button>
+        <button class="btn" id="sendRegister" type="submit">发送邮箱链接</button>
       </div>
+      <p class="register-note">填写密码会直接创建账号；留空则发送邮箱注册链接。</p>
       <button class="link-btn auth-toggle" id="goLogin" type="button">已有账号？去登录</button>
       <p class="auth-message" id="registerMessage"></p>
     </form>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/supabase-config.js?v=20260903k"></script>
+  <script src="assets/supabase-config.js?v=20260903l"></script>
   <script>
     'use strict';
 
     const MAIN_FILE = 'fitness-climbing-strength-20260903.html';
     const emailInput = document.getElementById('registerEmail');
+    const passwordInput = document.getElementById('registerPassword');
     const message = document.getElementById('registerMessage');
     const sendButton = document.getElementById('sendRegister');
     const form = document.getElementById('registerForm');
@@ -43,6 +49,10 @@
 
     function validEmail(value) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    }
+
+    function updateRegisterMode() {
+      sendButton.textContent = passwordInput.value ? '注册并设置密码' : '发送邮箱链接';
     }
 
     function appUrl() {
@@ -72,8 +82,38 @@
         return;
       }
 
-      setMessage('正在发送注册链接…');
       sendButton.disabled = true;
+      const password = passwordInput.value;
+      if (password) {
+        if (password.length < 6) {
+          sendButton.disabled = false;
+          setMessage('密码至少需要 6 位');
+          return;
+        }
+        setMessage('正在注册…');
+        const { data, error } = await client.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: redirectTo }
+        });
+        sendButton.disabled = false;
+        if (error) {
+          if (/already registered/i.test(error.message)) {
+            setMessage('这个邮箱已经注册。忘记密码时可用邮箱链接登录，并在资料页设置新密码。');
+          } else {
+            setMessage(error.message);
+          }
+          return;
+        }
+        if (data.session) {
+          window.location.href = MAIN_FILE;
+          return;
+        }
+        setMessage('注册成功，请到邮箱完成确认后返回登录');
+        return;
+      }
+
+      setMessage('正在发送注册链接…');
       const { error } = await client.auth.signInWithOtp({
         email,
         options: {
@@ -103,6 +143,7 @@
     form.addEventListener('submit', (event) => {
       event.preventDefault();
     });
+    passwordInput.addEventListener('input', updateRegisterMode);
     sendButton.addEventListener('click', () => sendRegisterLink(authClient));
     document.getElementById('goLogin').addEventListener('click', () => {
       window.location.href = MAIN_FILE;

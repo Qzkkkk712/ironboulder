@@ -577,6 +577,14 @@ main {
   border-top: 0;
 }
 
+.profile-note {
+  grid-column: 1 / -1;
+  margin: -6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .nutrition-summary {
   margin: 16px 0 10px;
   padding: 14px 16px;
@@ -637,6 +645,12 @@ main {
 
 .weekly-check:empty {
   display: none;
+}
+
+.register-note {
+  color: var(--muted);
+  font-size: 11px !important;
+  line-height: 1.5;
 }
 
 .stat-card {

@@ -120,6 +120,7 @@ let currentUser = null;
 let state = loadState();
 let cloudSyncTimer = null;
 let authSubscription = null;
+let authMode = 'link';
 let editingDay = null;
 let editingExercises = [];
 let exerciseSearch = '';
@@ -329,12 +330,47 @@ function setAuthMessage(text) {
 function resetAuthUI() {
   const emailInput = $('#authEmail');
   if (emailInput) emailInput.value = '';
+  authMode = 'link';
   const sendButton = $('#authSendLink');
   if (sendButton) {
     sendButton.disabled = false;
     sendButton.textContent = '发送登录链接';
   }
+  const passwordInput = $('#authPassword');
+  if (passwordInput) passwordInput.value = '';
+  updateAuthModeUI();
   setAuthMessage('');
+}
+
+function updateAuthModeUI() {
+  const passwordMode = authMode === 'password';
+  const wrap = $('#passwordWrap');
+  if (wrap) wrap.hidden = !passwordMode;
+  const linkActions = $('#linkActions');
+  if (linkActions) linkActions.hidden = passwordMode;
+  const passwordActions = $('#passwordActions');
+  if (passwordActions) passwordActions.hidden = !passwordMode;
+  const toggle = $('#authToggleMode');
+  if (toggle) toggle.textContent = passwordMode ? '改用邮箱链接登录' : '使用密码登录';
+}
+
+function toggleAuthMode() {
+  authMode = authMode === 'link' ? 'password' : 'link';
+  const passwordInput = $('#authPassword');
+  if (passwordInput) passwordInput.value = '';
+  updateAuthModeUI();
+  setAuthMessage('');
+  if (authMode === 'password' && $('#authPassword')) $('#authPassword').focus();
+}
+
+async function rememberCredential(email, password) {
+  if (!email || !password || !window.PasswordCredential || !navigator.credentials) return;
+  try {
+    const credential = new PasswordCredential({ id: email, password, name: email });
+    await navigator.credentials.store(credential);
+  } catch (error) {
+    // 浏览器不支持时静默跳过，仍可使用密码登录
+  }
 }
 
 function validEmail(email) {
@@ -384,6 +420,58 @@ async function sendLoginLink() {
     return;
   }
   setAuthMessage('登录链接已发送，请查收。若是新邮箱，请先注册');
+}
+
+async function signInWithPasswordSupabase() {
+  if (!supabaseClient) return;
+  const email = $('#authEmail').value.trim();
+  const password = $('#authPassword').value;
+  if (!validEmail(email)) {
+    setAuthMessage('请输入有效的邮箱地址');
+    return;
+  }
+  if (!password || password.length < 6) {
+    setAuthMessage('请输入至少 6 位密码');
+    return;
+  }
+  setAuthMessage('密码登录中…');
+  const button = $('#authPasswordSignIn');
+  if (button) button.disabled = true;
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (button) button.disabled = false;
+  if (error || !data.session) {
+    if (/invalid login credentials/i.test(error && error.message || '')) {
+      setAuthMessage('邮箱或密码不正确。忘记密码可用邮箱链接登录后重新设置。');
+    } else {
+      setAuthMessage((error && error.message) || '登录失败，请重试');
+    }
+    return;
+  }
+  await rememberCredential(email, password);
+  await applyUserSession(data.session);
+}
+
+async function savePasswordAccount() {
+  if (!supabaseClient || !currentUser) return;
+  const password = $('#profilePassword').value;
+  const confirm = $('#profilePasswordConfirm').value;
+  if (!password || password.length < 6) {
+    showToast('密码至少需要 6 位');
+    return;
+  }
+  if (password !== confirm) {
+    showToast('两次输入的密码不一致');
+    return;
+  }
+  const { error } = await supabaseClient.auth.updateUser({ password });
+  if (error) {
+    showToast(error.message);
+    return;
+  }
+  $('#profilePassword').value = '';
+  $('#profilePasswordConfirm').value = '';
+  await rememberCredential(currentUser.email, password);
+  showToast('密码已设置，之后可用邮箱和密码登录');
 }
 
 async function signOutSupabase() {
@@ -792,6 +880,16 @@ function renderProfile() {
   $('#profileGoal').value = state.profile.goal || 'mild-fat-loss';
   $('#profileCalories').value = state.profile.calories || '';
   $('#profileProtein').value = state.profile.protein || '';
+  const passwordInput = $('#profilePassword');
+  const passwordConfirm = $('#profilePasswordConfirm');
+  if (passwordInput) passwordInput.value = '';
+  if (passwordConfirm) passwordConfirm.value = '';
+  const accountNote = $('#accountEmailNote');
+  if (accountNote) {
+    accountNote.textContent = currentUser && currentUser.email
+      ? '登录邮箱：' + currentUser.email + '。设置密码后，可直接用邮箱和密码登录。'
+      : '登录后可设置密码，之后可用邮箱和密码直接登录。';
+  }
   const hipWrap = $('#hipWrap');
   if (hipWrap) hipWrap.hidden = (state.profile.gender || 'male') !== 'female';
 }
@@ -1281,11 +1379,16 @@ function bindEvents() {
   });
   $('#backHome').addEventListener('click', () => showView('home'));
   $('#syncNow').addEventListener('click', () => syncNow(true));
-  $('#authForm').addEventListener('submit', (event) => event.preventDefault());
-  $('#authSendLink').addEventListener('click', sendLoginLink);
+  $('#authForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (authMode === 'password') signInWithPasswordSupabase();
+    else sendLoginLink();
+  });
+  $('#authToggleMode').addEventListener('click', toggleAuthMode);
   $('#authRegisterLink').addEventListener('click', () => {
     window.location.href = 'register.html';
   });
+  $('#savePassword').addEventListener('click', savePasswordAccount);
   $('#authLogout').addEventListener('click', signOutSupabase);
   $('#mobileView').addEventListener('click', () => {
     const mobile = document.body.classList.toggle('mobile-mode');
@@ -1543,7 +1646,7 @@ if (/Mobi|Android|iPhone|iPad|Phone/i.test(navigator.userAgent) || (navigator.ma
       await applyUserSession(data.session);
     } else {
       setAuthScreen(true);
-      setAuthMessage('已有账号直接发送；新账号请点下方注册');
+      setAuthMessage('支持密码登录和邮箱链接两种方式');
     }
   } else if (location.protocol === 'http:' || location.protocol === 'https:') {
     setTimeout(() => syncNow(false), 400);
