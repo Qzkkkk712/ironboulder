@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>注册 ironboulder</title>
-  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903j">
-  <link rel="stylesheet" href="styles.css?v=20260903j">
+  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903k">
+  <link rel="stylesheet" href="styles.css?v=20260903k">
 </head>
 <body>
   <div class="auth-screen">
     <form class="auth-card" id="registerForm" novalidate>
-      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903j" alt="ironboulder"></span>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903k" alt="ironboulder"></span>
       <h2>注册 ironboulder</h2>
       <p>不需要设置密码，注册登录链接会发送到你的邮箱</p>
       <label class="field">
@@ -26,7 +26,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/supabase-config.js?v=20260903j"></script>
+  <script src="assets/supabase-config.js?v=20260903k"></script>
   <script>
     'use strict';
 
@@ -46,6 +46,8 @@
     }
 
     function appUrl() {
+      const configured = window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.siteUrl;
+      if (configured) return configured;
       if (location.protocol === 'file:') return '';
       const url = new URL(MAIN_FILE, location.href);
       url.hash = '';

@@ -342,6 +342,8 @@ function validEmail(email) {
 }
 
 function authRedirectUrl() {
+  const configured = window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.siteUrl;
+  if (configured) return configured;
   if (location.protocol === 'file:') return '';
   const url = new URL('fitness-climbing-strength-20260903.html', location.href);
   url.hash = '';
