@@ -123,6 +123,7 @@ let state = loadState();
 let cloudSyncTimer = null;
 let authSubscription = null;
 let authMode = 'password';
+let cloudProfileError = false;
 let editingDay = null;
 let editingExercises = [];
 let exerciseSearch = '';
@@ -295,18 +296,17 @@ async function applyUserSession(session) {
   setAuthScreen(false);
   setAuthMessage('');
   if (!sameUser) {
+    cloudProfileError = false;
     await loadCloudState();
     renderAll();
   }
-  ensureOnboarding();
+  if (!cloudProfileError) ensureOnboarding();
 }
 
 function watchAuthState() {
   if (!supabaseClient || authSubscription) return;
   const { data } = supabaseClient.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-      if (session && session.user) applyUserSession(session);
-    } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+    if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
       if (!currentUser) return;
       const userKey = storageKey();
       currentUser = null;
@@ -329,6 +329,18 @@ function setAuthScreen(visible) {
   document.querySelector('.topbar').style.display = visible ? 'none' : '';
   document.querySelector('main').style.display = visible ? 'none' : '';
   if (visible) resetAuthUI();
+}
+
+function setLoadingScreen(visible) {
+  const loading = $('#loadingScreen');
+  if (!loading) return;
+  loading.hidden = !visible;
+  if (visible) {
+    const auth = $('#authScreen');
+    const onboarding = $('#onboardingScreen');
+    if (auth) auth.hidden = true;
+    if (onboarding) onboarding.hidden = true;
+  }
 }
 
 function profileIsReady() {
@@ -623,11 +635,13 @@ async function loadCloudState() {
     .eq('id', currentUser.id)
     .maybeSingle();
   if (error) {
+    cloudProfileError = true;
     if (cached) {
       state = cached;
       localStorage.setItem(key, JSON.stringify(state));
       renderAll();
-      ensureOnboarding();
+    } else {
+      renderAll();
     }
     $('#syncStatus').textContent = '云端读取失败';
     return;
@@ -1802,12 +1816,15 @@ if (/Mobi|Android|iPhone|iPad|Phone/i.test(navigator.userAgent) || (navigator.ma
 (async () => {
   const cfg = window.SUPABASE_CONFIG || {};
   if (cfg.url && cfg.anonKey) {
+    setLoadingScreen(true);
     initSupabase();
     watchAuthState();
     const { data } = await supabaseClient.auth.getSession();
     if (data.session) {
       await applyUserSession(data.session);
+      setLoadingScreen(false);
     } else {
+      setLoadingScreen(false);
       setAuthScreen(true);
       setAuthMessage('首次登录前请先用邮箱确认并设置密码');
     }

@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>ironboulder</title>
-  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903s">
-  <link rel="stylesheet" href="styles.css?v=20260903s">
+  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903t">
+  <link rel="stylesheet" href="styles.css?v=20260903t">
 </head>
 <body>
   <div class="auth-screen" id="authScreen" hidden>
     <form class="auth-card" id="authForm" autocomplete="on" novalidate>
-      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903s" alt="ironboulder"></span>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903t" alt="ironboulder"></span>
       <h2>ironboulder</h2>
       <p id="authSubtitle">使用邮箱和密码登录</p>
       <label class="field">
@@ -35,7 +35,7 @@
 
   <div class="auth-screen onboarding-screen" id="onboardingScreen" hidden>
     <form class="auth-card onboarding-card" id="onboardingForm" novalidate>
-      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903s" alt="ironboulder"></span>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903t" alt="ironboulder"></span>
       <h2>完善个人档案</h2>
       <p>首次使用需要先填写基础资料，才能进入主页。</p>
       <div class="profile-grid onboarding-grid">
@@ -92,10 +92,17 @@
     </form>
   </div>
 
+  <div class="auth-screen loading-screen" id="loadingScreen" hidden>
+    <div class="loading-card">
+      <span class="loader" aria-hidden="true"></span>
+      <p>正在恢复登录状态…</p>
+    </div>
+  </div>
+
   <header class="topbar">
     <div class="brand">
       <button class="back-btn" id="backHome" type="button" hidden>‹</button>
-      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903s" alt="ironboulder"></span>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903t" alt="ironboulder"></span>
       <div>
         <h1>ironboulder</h1>
         <p class="sync-line"><i aria-hidden="true"></i><span id="syncStatus">本机保存</span></p>
@@ -391,8 +398,8 @@
   </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/supabase-config.js?v=20260903s"></script>
-  <script src="assets/exercise-library.js?v=20260903s"></script>
-  <script src="app.js?v=20260903s"></script>
+  <script src="assets/supabase-config.js?v=20260903t"></script>
+  <script src="assets/exercise-library.js?v=20260903t"></script>
+  <script src="app.js?v=20260903t"></script>
 </body>
 </html>
