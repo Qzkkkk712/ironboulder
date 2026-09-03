@@ -70,7 +70,6 @@ const DEFAULT_PROFILE = {
   hip: '',
   activity: 'moderate',
   goal: 'mild-fat-loss',
-  completeAt: '',
   weight: 78.5,
   squat: '',
   bench: '',
@@ -205,8 +204,6 @@ function showView(name) {
   document.querySelectorAll('#bottomNav button').forEach((button) => {
     button.classList.toggle('active', button.dataset.nav === name);
   });
-  const bottomNav = $('#bottomNav');
-  if (bottomNav) bottomNav.hidden = name === 'home';
   $('#backHome').hidden = name === 'home';
 }
 
@@ -323,28 +320,6 @@ function setAuthScreen(visible) {
   document.querySelector('.topbar').style.display = visible ? 'none' : '';
   document.querySelector('main').style.display = visible ? 'none' : '';
   if (visible) resetAuthUI();
-}
-
-function setLoadingScreen(visible) {
-  const loading = $('#loadingScreen');
-  if (!loading) return;
-  loading.hidden = !visible;
-  if (visible) {
-    const auth = $('#authScreen');
-    if (auth) auth.hidden = true;
-  }
-}
-
-function profileReady(p) {
-  if (!p) return false;
-  return Boolean(
-    p.gender &&
-    numValue(p.age) > 0 &&
-    numValue(p.height) > 0 &&
-    numValue(p.weight) > 0 &&
-    ACTIVITY_META[p.activity] &&
-    GOAL_META[p.goal]
-  );
 }
 
 function setAuthMessage(text) {
@@ -531,8 +506,6 @@ async function loadCloudState() {
       state = cached;
       localStorage.setItem(key, JSON.stringify(state));
       renderAll();
-    } else {
-      renderAll();
     }
     $('#syncStatus').textContent = '云端读取失败';
     return;
@@ -542,15 +515,8 @@ async function loadCloudState() {
     const cloud = normalizeSyncedState(data.state);
     const localTime = Date.parse((cached && cached.updatedAt) || '') || 0;
     const cloudTime = Date.parse(cloud.updatedAt || '') || 0;
-    const localReady = Boolean(cached && profileReady(cached.profile));
-    const cloudReady = profileReady(cloud.profile);
     if (cloudTime >= localTime || !localTime) {
-      if (!cloudReady && localReady) {
-        state = cached;
-        shouldPush = true;
-      } else {
-        state = cloud;
-      }
+      state = cloud;
     } else if (cached) {
       state = cached;
       shouldPush = true;
@@ -597,18 +563,9 @@ async function syncCloud(manual) {
     const localTime = Date.parse(state.updatedAt || '') || 0;
     const cloudTime = Date.parse((data && data.state && data.state.updatedAt) || '') || 0;
     if (data && data.state && cloudTime > localTime) {
-      const cloud = normalizeSyncedState(data.state);
-      if (!profileReady(cloud.profile) && profileReady(state.profile)) {
-        state.updatedAt = new Date().toISOString();
-        const { error } = await supabaseClient
-          .from('user_data')
-          .upsert({ id: currentUser.id, state, updated_at: state.updatedAt });
-        if (error) throw error;
-      } else {
-        state = cloud;
-        localStorage.setItem(storageKey(), JSON.stringify(state));
-        renderAll();
-      }
+      state = normalizeSyncedState(data.state);
+      localStorage.setItem(storageKey(), JSON.stringify(state));
+      renderAll();
     } else {
       state.updatedAt = new Date().toISOString();
       const { error } = await supabaseClient
@@ -994,26 +951,26 @@ function renderDashboard() {
     weightEl.textContent = trend.weight > 0 ? trend.weight.toFixed(1) + ' kg' : '--';
   }
   const changeEl = $('#homeWeightChange');
+  const wrap = $('#homeChangeWrap');
   const labelEl = $('#homeChangeLabel');
-  if (changeEl && labelEl) {
+  if (changeEl && wrap) {
     if (trend.delta === null) {
       changeEl.textContent = '--';
-      labelEl.textContent = '近期变化';
+      wrap.className = 'change-cell';
     } else {
       const text = trend.delta > 0.049 ? '+' + trend.delta.toFixed(1) : trend.delta < -0.049 ? trend.delta.toFixed(1) : '±0.0';
       changeEl.textContent = text + ' kg';
       labelEl.textContent = trend.label || '较上次';
+      const losing = trend.delta < -0.049;
+      const gaining = trend.delta > 0.049;
+      const good = (state.profile.goal || '').indexOf('fat') !== -1 ? losing : (state.profile.goal === 'lean-bulk' ? gaining : !gaining && !losing);
+      wrap.className = 'change-cell ' + (good ? 'is-good' : gaining || losing ? 'is-warn' : '');
     }
   }
 
   const macros = currentMacroSplit();
   $('#macroTarget').textContent = formatNumber(macros.target) + ' kcal';
   $('#macroProtein').textContent = macros.protein + ' g';
-  const proteinHint = $('#macroProteinHint');
-  if (proteinHint) {
-    const currentWeight = numValue(state.profile.weight);
-    proteinHint.textContent = currentWeight > 0 ? (macros.protein / currentWeight).toFixed(1) + ' g/kg' : '--';
-  }
   $('#macroCarbs').textContent = macros.carbs + ' g';
   $('#macroFat').textContent = macros.fat + ' g';
   const tdeeEl = $('#macroTdee');
@@ -1456,7 +1413,7 @@ function bindEvents() {
   $('#authLogout').addEventListener('click', signOutSupabase);
   $('#mobileView').addEventListener('click', () => {
     const mobile = document.body.classList.toggle('mobile-mode');
-    $('#mobileView').setAttribute('aria-label', mobile ? '电脑版' : '手机版');
+    $('#mobileView').textContent = mobile ? '电脑版' : '手机版';
     showView(currentView);
   });
 
@@ -1695,21 +1652,18 @@ bindEvents();
 renderAll();
 if (/Mobi|Android|iPhone|iPad|Phone/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 0 && window.innerWidth < 1000)) {
   document.body.classList.add('mobile-mode');
-  $('#mobileView').setAttribute('aria-label', '电脑版');
+  $('#mobileView').textContent = '电脑版';
 }
 
 (async () => {
   const cfg = window.SUPABASE_CONFIG || {};
   if (cfg.url && cfg.anonKey) {
-    setLoadingScreen(true);
     initSupabase();
     watchAuthState();
     const { data } = await supabaseClient.auth.getSession();
     if (data.session) {
       await applyUserSession(data.session);
-      setLoadingScreen(false);
     } else {
-      setLoadingScreen(false);
       setAuthScreen(true);
       setAuthMessage('首次登录前请先用邮箱确认并设置密码');
     }
