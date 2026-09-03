@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>ironboulder</title>
-  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903q">
-  <link rel="stylesheet" href="styles.css?v=20260903q">
+  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903r">
+  <link rel="stylesheet" href="styles.css?v=20260903r">
 </head>
 <body>
   <div class="auth-screen" id="authScreen" hidden>
     <form class="auth-card" id="authForm" autocomplete="on" novalidate>
-      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903q" alt="ironboulder"></span>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903r" alt="ironboulder"></span>
       <h2>ironboulder</h2>
       <p id="authSubtitle">使用邮箱和密码登录</p>
       <label class="field">
@@ -35,7 +35,7 @@
 
   <div class="auth-screen onboarding-screen" id="onboardingScreen" hidden>
     <form class="auth-card onboarding-card" id="onboardingForm" novalidate>
-      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903q" alt="ironboulder"></span>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903r" alt="ironboulder"></span>
       <h2>完善个人档案</h2>
       <p>首次使用需要先填写基础资料，才能进入主页。</p>
       <div class="profile-grid onboarding-grid">
@@ -76,6 +76,16 @@
             <option value="lean-bulk">增肌</option>
           </select>
         </label>
+        <h3 class="profile-subhead">设置密码（可选）</h3>
+        <p class="profile-note">用邮箱链接登录时建议设置，以后可直接用邮箱和密码登录。</p>
+        <label class="field">
+          <span>新密码</span>
+          <input type="password" id="onboardingPassword" name="new-password" autocomplete="new-password" placeholder="至少 6 位">
+        </label>
+        <label class="field">
+          <span>确认密码</span>
+          <input type="password" id="onboardingPasswordConfirm" name="new-password" autocomplete="new-password" placeholder="再次输入">
+        </label>
       </div>
       <button class="btn" id="onboardingSave" type="submit">保存并进入</button>
       <p class="auth-message" id="onboardingMessage"></p>
@@ -85,7 +95,7 @@
   <header class="topbar">
     <div class="brand">
       <button class="back-btn" id="backHome" type="button" hidden>‹</button>
-      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903q" alt="ironboulder"></span>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903r" alt="ironboulder"></span>
       <div>
         <h1>ironboulder</h1>
         <p class="sync-line"><i aria-hidden="true"></i><span id="syncStatus">本机保存</span></p>
@@ -381,8 +391,8 @@
   </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/supabase-config.js?v=20260903q"></script>
-  <script src="assets/exercise-library.js?v=20260903q"></script>
-  <script src="app.js?v=20260903q"></script>
+  <script src="assets/supabase-config.js?v=20260903r"></script>
+  <script src="assets/exercise-library.js?v=20260903r"></script>
+  <script src="app.js?v=20260903r"></script>
 </body>
 </html>

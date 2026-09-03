@@ -362,6 +362,8 @@ function setOnboardingScreen(visible) {
     $('#onboardingWeight').value = latest || '';
     $('#onboardingActivity').value = state.profile.activity || 'moderate';
     $('#onboardingGoal').value = state.profile.goal || 'mild-fat-loss';
+    $('#onboardingPassword').value = '';
+    $('#onboardingPasswordConfirm').value = '';
     $('#onboardingMessage').textContent = '';
   }
 }
@@ -371,7 +373,7 @@ function ensureOnboarding() {
   if (!profileIsReady()) setOnboardingScreen(true);
 }
 
-function saveOnboardingProfile() {
+async function saveOnboardingProfile() {
   const age = numValue($('#onboardingAge').value);
   const height = numValue($('#onboardingHeight').value);
   const weight = numValue($('#onboardingWeight').value);
@@ -380,6 +382,18 @@ function saveOnboardingProfile() {
     message.textContent = '请填写有效的年龄、身高和体重';
     return;
   }
+  const password = $('#onboardingPassword').value;
+  const passwordConfirm = $('#onboardingPasswordConfirm').value;
+  if (password || passwordConfirm) {
+    if (password.length < 6) {
+      message.textContent = '密码至少需要 6 位';
+      return;
+    }
+    if (password !== passwordConfirm) {
+      message.textContent = '两次输入的密码不一致';
+      return;
+    }
+  }
   state.profile.gender = $('#onboardingGender').value;
   state.profile.age = age;
   state.profile.height = height;
@@ -387,6 +401,8 @@ function saveOnboardingProfile() {
   state.profile.activity = $('#onboardingActivity').value;
   state.profile.goal = $('#onboardingGoal').value;
   state.profile.completeAt = new Date().toISOString();
+  const saveButton = $('#onboardingSave');
+  if (saveButton) saveButton.disabled = true;
   if (state.weights.length === 0) {
     state.weights.push({
       id: 'w-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
@@ -397,6 +413,23 @@ function saveOnboardingProfile() {
     });
   }
   saveState();
+  if (password) {
+    try {
+      const { error: passwordError } = await supabaseClient.auth.updateUser({ password });
+      if (passwordError) throw passwordError;
+      if (currentUser && currentUser.email) await rememberCredential(currentUser.email, password);
+    } catch (error) {
+      if (saveButton) saveButton.disabled = false;
+      message.textContent = (error && error.message) || '密码设置失败，请重试';
+      return;
+    }
+  }
+  try {
+    await syncCloud(true);
+  } catch (error) {
+    // 离线时仍进入主页，本地缓存会保留档案
+  }
+  if (saveButton) saveButton.disabled = false;
   setOnboardingScreen(false);
   renderAll();
   showView('home');
