@@ -1,7 +1,6 @@
 'use strict';
 
 const LS_KEY = 'climbing-fitness-program-v1';
-const BOUND_KEY_PREFIX = 'ironboulder-profile-bound-';
 const DAYS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 const SESSION_OPTIONS = ['上肢推', '上肢拉', '下肢', '臀腿', '全身', '核心有氧', '避抓握后链', '避抓握推类'];
 const SESSIONS = {
@@ -123,7 +122,6 @@ let state = loadState();
 let cloudSyncTimer = null;
 let authSubscription = null;
 let authMode = 'password';
-let cloudProfileError = false;
 let editingDay = null;
 let editingExercises = [];
 let exerciseSearch = '';
@@ -296,11 +294,9 @@ async function applyUserSession(session) {
   setAuthScreen(false);
   setAuthMessage('');
   if (!sameUser) {
-    cloudProfileError = false;
     await loadCloudState();
     renderAll();
   }
-  if (!cloudProfileError) ensureOnboarding();
 }
 
 function watchAuthState() {
@@ -324,8 +320,6 @@ function setAuthScreen(visible) {
   const screen = $('#authScreen');
   if (!screen) return;
   screen.hidden = !visible;
-  const onboarding = $('#onboardingScreen');
-  if (onboarding) onboarding.hidden = visible;
   document.querySelector('.topbar').style.display = visible ? 'none' : '';
   document.querySelector('main').style.display = visible ? 'none' : '';
   if (visible) resetAuthUI();
@@ -337,14 +331,8 @@ function setLoadingScreen(visible) {
   loading.hidden = !visible;
   if (visible) {
     const auth = $('#authScreen');
-    const onboarding = $('#onboardingScreen');
     if (auth) auth.hidden = true;
-    if (onboarding) onboarding.hidden = true;
   }
-}
-
-function profileIsReady() {
-  return profileReady(state.profile);
 }
 
 function profileReady(p) {
@@ -357,102 +345,6 @@ function profileReady(p) {
     ACTIVITY_META[p.activity] &&
     GOAL_META[p.goal]
   );
-}
-
-function setOnboardingScreen(visible) {
-  const screen = $('#onboardingScreen');
-  if (!screen) return;
-  const auth = $('#authScreen');
-  if (auth) auth.hidden = visible;
-  screen.hidden = !visible;
-  document.querySelector('.topbar').style.display = visible ? 'none' : '';
-  document.querySelector('main').style.display = visible ? 'none' : '';
-  if (visible) {
-    const latest = weightTrendInfo().weight || numValue(state.profile.weight);
-    $('#onboardingGender').value = state.profile.gender || 'male';
-    $('#onboardingAge').value = state.profile.age || '';
-    $('#onboardingHeight').value = state.profile.height || '';
-    $('#onboardingWeight').value = latest || '';
-    $('#onboardingActivity').value = state.profile.activity || 'moderate';
-    $('#onboardingGoal').value = state.profile.goal || 'mild-fat-loss';
-    $('#onboardingPassword').value = '';
-    $('#onboardingPasswordConfirm').value = '';
-    $('#onboardingMessage').textContent = '';
-  }
-}
-
-function ensureOnboarding() {
-  if (!currentUser) return;
-  if (profileIsReady()) {
-    localStorage.setItem(BOUND_KEY_PREFIX + currentUser.id, '1');
-    return;
-  }
-  if (localStorage.getItem(BOUND_KEY_PREFIX + currentUser.id) === '1') return;
-  setOnboardingScreen(true);
-}
-
-async function saveOnboardingProfile() {
-  const age = numValue($('#onboardingAge').value);
-  const height = numValue($('#onboardingHeight').value);
-  const weight = numValue($('#onboardingWeight').value);
-  const message = $('#onboardingMessage');
-  if (age <= 0 || age > 100 || height <= 0 || weight <= 0) {
-    message.textContent = '请填写有效的年龄、身高和体重';
-    return;
-  }
-  const password = $('#onboardingPassword').value;
-  const passwordConfirm = $('#onboardingPasswordConfirm').value;
-  if (password || passwordConfirm) {
-    if (password.length < 6) {
-      message.textContent = '密码至少需要 6 位';
-      return;
-    }
-    if (password !== passwordConfirm) {
-      message.textContent = '两次输入的密码不一致';
-      return;
-    }
-  }
-  state.profile.gender = $('#onboardingGender').value;
-  state.profile.age = age;
-  state.profile.height = height;
-  state.profile.weight = weight;
-  state.profile.activity = $('#onboardingActivity').value;
-  state.profile.goal = $('#onboardingGoal').value;
-  state.profile.completeAt = new Date().toISOString();
-  if (currentUser) localStorage.setItem(BOUND_KEY_PREFIX + currentUser.id, '1');
-  const saveButton = $('#onboardingSave');
-  if (saveButton) saveButton.disabled = true;
-  if (state.weights.length === 0) {
-    state.weights.push({
-      id: 'w-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
-      date: todayStr(),
-      weight,
-      week: state.selectedWeek,
-      note: '初始体重'
-    });
-  }
-  saveState();
-  if (password) {
-    try {
-      const { error: passwordError } = await supabaseClient.auth.updateUser({ password });
-      if (passwordError) throw passwordError;
-      if (currentUser && currentUser.email) await rememberCredential(currentUser.email, password);
-    } catch (error) {
-      if (saveButton) saveButton.disabled = false;
-      message.textContent = (error && error.message) || '密码设置失败，请重试';
-      return;
-    }
-  }
-  try {
-    await syncCloud(true);
-  } catch (error) {
-    // 离线时仍进入主页，本地缓存会保留档案
-  }
-  if (saveButton) saveButton.disabled = false;
-  setOnboardingScreen(false);
-  renderAll();
-  showView('home');
-  showToast('个人档案已保存');
 }
 
 function setAuthMessage(text) {
@@ -635,7 +527,6 @@ async function loadCloudState() {
     .eq('id', currentUser.id)
     .maybeSingle();
   if (error) {
-    cloudProfileError = true;
     if (cached) {
       state = cached;
       localStorage.setItem(key, JSON.stringify(state));
@@ -684,7 +575,6 @@ async function loadCloudState() {
     state = freshState();
   }
   renderAll();
-  ensureOnboarding();
   if (shouldPush) queueCloudSync();
 }
 
@@ -718,7 +608,6 @@ async function syncCloud(manual) {
         state = cloud;
         localStorage.setItem(storageKey(), JSON.stringify(state));
         renderAll();
-        ensureOnboarding();
       }
     } else {
       state.updatedAt = new Date().toISOString();
@@ -1562,10 +1451,6 @@ function bindEvents() {
   $('#authToggleMode').addEventListener('click', toggleAuthMode);
   $('#authRegisterLink').addEventListener('click', () => {
     window.location.href = 'register.html';
-  });
-  $('#onboardingForm').addEventListener('submit', (event) => {
-    event.preventDefault();
-    saveOnboardingProfile();
   });
   $('#savePassword').addEventListener('click', savePasswordAccount);
   $('#authLogout').addEventListener('click', signOutSupabase);
