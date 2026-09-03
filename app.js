@@ -70,6 +70,7 @@ const DEFAULT_PROFILE = {
   hip: '',
   activity: 'moderate',
   goal: 'mild-fat-loss',
+  completeAt: '',
   weight: 78.5,
   squat: '',
   bench: '',
@@ -330,7 +331,11 @@ function setAuthScreen(visible) {
 }
 
 function profileIsReady() {
-  const p = state.profile;
+  return profileReady(state.profile);
+}
+
+function profileReady(p) {
+  if (!p) return false;
   return Boolean(
     p.gender &&
     numValue(p.age) > 0 &&
@@ -381,6 +386,7 @@ function saveOnboardingProfile() {
   state.profile.weight = weight;
   state.profile.activity = $('#onboardingActivity').value;
   state.profile.goal = $('#onboardingGoal').value;
+  state.profile.completeAt = new Date().toISOString();
   if (state.weights.length === 0) {
     state.weights.push({
       id: 'w-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
@@ -591,8 +597,15 @@ async function loadCloudState() {
     const cloud = normalizeSyncedState(data.state);
     const localTime = Date.parse((cached && cached.updatedAt) || '') || 0;
     const cloudTime = Date.parse(cloud.updatedAt || '') || 0;
+    const localReady = Boolean(cached && profileReady(cached.profile));
+    const cloudReady = profileReady(cloud.profile);
     if (cloudTime >= localTime || !localTime) {
-      state = cloud;
+      if (!cloudReady && localReady) {
+        state = cached;
+        shouldPush = true;
+      } else {
+        state = cloud;
+      }
     } else if (cached) {
       state = cached;
       shouldPush = true;
@@ -640,10 +653,19 @@ async function syncCloud(manual) {
     const localTime = Date.parse(state.updatedAt || '') || 0;
     const cloudTime = Date.parse((data && data.state && data.state.updatedAt) || '') || 0;
     if (data && data.state && cloudTime > localTime) {
-      state = normalizeSyncedState(data.state);
-      localStorage.setItem(storageKey(), JSON.stringify(state));
-      renderAll();
-      ensureOnboarding();
+      const cloud = normalizeSyncedState(data.state);
+      if (!profileReady(cloud.profile) && profileReady(state.profile)) {
+        state.updatedAt = new Date().toISOString();
+        const { error } = await supabaseClient
+          .from('user_data')
+          .upsert({ id: currentUser.id, state, updated_at: state.updatedAt });
+        if (error) throw error;
+      } else {
+        state = cloud;
+        localStorage.setItem(storageKey(), JSON.stringify(state));
+        renderAll();
+        ensureOnboarding();
+      }
     } else {
       state.updatedAt = new Date().toISOString();
       const { error } = await supabaseClient
