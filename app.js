@@ -120,7 +120,7 @@ let currentUser = null;
 let state = loadState();
 let cloudSyncTimer = null;
 let authSubscription = null;
-let authMode = 'link';
+let authMode = 'password';
 let editingDay = null;
 let editingExercises = [];
 let exerciseSearch = '';
@@ -330,7 +330,7 @@ function setAuthMessage(text) {
 function resetAuthUI() {
   const emailInput = $('#authEmail');
   if (emailInput) emailInput.value = '';
-  authMode = 'link';
+  authMode = 'password';
   const sendButton = $('#authSendLink');
   if (sendButton) {
     sendButton.disabled = false;
@@ -442,6 +442,8 @@ async function signInWithPasswordSupabase() {
   if (error || !data.session) {
     if (/invalid login credentials/i.test(error && error.message || '')) {
       setAuthMessage('邮箱或密码不正确。忘记密码可用邮箱链接登录后重新设置。');
+    } else if (/email not confirmed/i.test(error && error.message || '')) {
+      setAuthMessage('邮箱还没有确认。请先到邮箱点击注册确认链接，再回来登录。');
     } else {
       setAuthMessage((error && error.message) || '登录失败，请重试');
     }
@@ -1646,7 +1648,7 @@ if (/Mobi|Android|iPhone|iPad|Phone/i.test(navigator.userAgent) || (navigator.ma
       await applyUserSession(data.session);
     } else {
       setAuthScreen(true);
-      setAuthMessage('支持密码登录和邮箱链接两种方式');
+      setAuthMessage('首次登录前请先用邮箱确认并设置密码');
     }
   } else if (location.protocol === 'http:' || location.protocol === 'https:') {
     setTimeout(() => syncNow(false), 400);

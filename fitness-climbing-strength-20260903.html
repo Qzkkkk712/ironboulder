@@ -4,30 +4,30 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>ironboulder</title>
-  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903l">
-  <link rel="stylesheet" href="styles.css?v=20260903l">
+  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903m">
+  <link rel="stylesheet" href="styles.css?v=20260903m">
 </head>
 <body>
   <div class="auth-screen" id="authScreen" hidden>
     <form class="auth-card" id="authForm" autocomplete="on" novalidate>
-      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903l" alt="ironboulder"></span>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903m" alt="ironboulder"></span>
       <h2>ironboulder</h2>
-      <p id="authSubtitle">邮箱链接和密码均可登录</p>
+      <p id="authSubtitle">使用邮箱和密码登录</p>
       <label class="field">
         <span>邮箱</span>
         <input type="email" id="authEmail" name="email" autocomplete="username" placeholder="you@example.com">
       </label>
-      <label class="field" id="passwordWrap" hidden>
+      <label class="field" id="passwordWrap">
         <span>密码</span>
         <input type="password" id="authPassword" name="password" autocomplete="current-password" placeholder="至少 6 位">
       </label>
-      <div class="auth-actions single" id="linkActions">
+      <div class="auth-actions single" id="linkActions" hidden>
         <button class="btn" id="authSendLink" type="submit">发送登录链接</button>
       </div>
-      <div class="auth-actions single" id="passwordActions" hidden>
+      <div class="auth-actions single" id="passwordActions">
         <button class="btn" id="authPasswordSignIn" type="submit">密码登录</button>
       </div>
-      <button class="link-btn auth-toggle" id="authToggleMode" type="button">使用密码登录</button>
+      <button class="link-btn auth-toggle" id="authToggleMode" type="button">改用邮箱链接登录</button>
       <button class="link-btn auth-toggle" id="authRegisterLink" type="button">没有账号？去注册</button>
       <p class="auth-message" id="authMessage"></p>
     </form>
@@ -36,7 +36,7 @@
   <header class="topbar">
     <div class="brand">
       <button class="back-btn" id="backHome" type="button" hidden>‹</button>
-      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903l" alt="ironboulder"></span>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903m" alt="ironboulder"></span>
       <div>
         <h1>ironboulder</h1>
         <p class="sync-line" id="syncStatus">本机保存</p>
@@ -323,8 +323,8 @@
   </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/supabase-config.js?v=20260903l"></script>
-  <script src="assets/exercise-library.js?v=20260903l"></script>
-  <script src="app.js?v=20260903l"></script>
+  <script src="assets/supabase-config.js?v=20260903m"></script>
+  <script src="assets/exercise-library.js?v=20260903m"></script>
+  <script src="app.js?v=20260903m"></script>
 </body>
 </html>
