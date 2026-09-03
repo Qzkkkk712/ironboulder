@@ -1,6 +1,7 @@
 'use strict';
 
 const LS_KEY = 'climbing-fitness-program-v1';
+const BOUND_KEY_PREFIX = 'ironboulder-profile-bound-';
 const DAYS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 const SESSION_OPTIONS = ['上肢推', '上肢拉', '下肢', '臀腿', '全身', '核心有氧', '避抓握后链', '避抓握推类'];
 const SESSIONS = {
@@ -370,7 +371,12 @@ function setOnboardingScreen(visible) {
 
 function ensureOnboarding() {
   if (!currentUser) return;
-  if (!profileIsReady()) setOnboardingScreen(true);
+  if (profileIsReady()) {
+    localStorage.setItem(BOUND_KEY_PREFIX + currentUser.id, '1');
+    return;
+  }
+  if (localStorage.getItem(BOUND_KEY_PREFIX + currentUser.id) === '1') return;
+  setOnboardingScreen(true);
 }
 
 async function saveOnboardingProfile() {
@@ -401,6 +407,7 @@ async function saveOnboardingProfile() {
   state.profile.activity = $('#onboardingActivity').value;
   state.profile.goal = $('#onboardingGoal').value;
   state.profile.completeAt = new Date().toISOString();
+  if (currentUser) localStorage.setItem(BOUND_KEY_PREFIX + currentUser.id, '1');
   const saveButton = $('#onboardingSave');
   if (saveButton) saveButton.disabled = true;
   if (state.weights.length === 0) {
