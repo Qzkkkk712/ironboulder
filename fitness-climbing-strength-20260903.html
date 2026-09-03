@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ironboulder</title>
+  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903j">
+  <link rel="stylesheet" href="styles.css?v=20260903j">
+</head>
+<body>
+  <div class="auth-screen" id="authScreen" hidden>
+    <form class="auth-card" id="authForm" autocomplete="on" novalidate>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903j" alt="ironboulder"></span>
+      <h2>ironboulder</h2>
+      <p id="authSubtitle">登录无需密码，邮件里的链接会自动登录</p>
+      <label class="field">
+        <span>邮箱</span>
+        <input type="email" id="authEmail" name="email" autocomplete="username" placeholder="you@example.com">
+      </label>
+      <div class="auth-actions single">
+        <button class="btn" id="authSendLink" type="submit">发送登录链接</button>
+      </div>
+      <button class="link-btn auth-toggle" id="authRegisterLink" type="button">没有账号？去注册</button>
+      <p class="auth-message" id="authMessage"></p>
+    </form>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <button class="back-btn" id="backHome" type="button" hidden>‹</button>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903j" alt="ironboulder"></span>
+      <div>
+        <h1>ironboulder</h1>
+        <p class="sync-line" id="syncStatus">本机保存</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn ghost" id="syncNow" type="button">同步</button>
+      <button class="btn ghost" id="mobileView" type="button">手机版</button>
+      <button class="btn ghost" id="authLogout" type="button" hidden>退出</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="view active" id="view-home">
+      <section class="status-card">
+        <div class="status-tags">
+          <span class="goal-pill" id="homeGoalTag">--</span>
+          <span class="phase-pill" id="homePhaseTag">--</span>
+        </div>
+        <div class="status-numbers">
+          <div>
+            <span>当前体重</span>
+            <strong id="homeWeight">--</strong>
+          </div>
+          <div class="change-cell" id="homeChangeWrap">
+            <span id="homeChangeLabel">近期变化</span>
+            <strong id="homeWeightChange">--</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="macro-board">
+        <div class="macro-head">
+          <div class="target-calories">
+            <span>每日热量预算</span>
+            <strong id="macroTarget">--</strong>
+          </div>
+          <div class="tdee-cell">
+            <span>预估 TDEE</span>
+            <strong id="macroTdee">--</strong>
+            <small id="macroDelta">--</small>
+          </div>
+        </div>
+        <div class="macro-list">
+          <div class="macro-row" data-macro="protein">
+            <span>蛋白质</span>
+            <strong id="macroProtein">--</strong>
+            <div class="track"><i></i></div>
+          </div>
+          <div class="macro-row" data-macro="carbs">
+            <span>碳水</span>
+            <strong id="macroCarbs">--</strong>
+            <div class="track"><i></i></div>
+          </div>
+          <div class="macro-row" data-macro="fat">
+            <span>脂肪</span>
+            <strong id="macroFat">--</strong>
+            <div class="track"><i></i></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="home-actions">
+        <button class="start-action" id="startToday" type="button">
+          <span class="start-icon">▶</span>
+          <span><strong>开始今天的训练</strong><small id="startTodayHint">记录本次实际训练</small></span>
+        </button>
+        <div class="quick-grid">
+          <button class="quick-card" id="quickWeight" type="button">
+            <span class="menu-icon">⚖</span>
+            <span><strong>记录体重</strong><small>体重与近期趋势</small></span>
+          </button>
+          <button class="quick-card" data-view="plan" type="button">
+            <span class="menu-icon">📅</span>
+            <span><strong>训练计划与记录</strong><small>12 周动作与 RPE</small></span>
+          </button>
+          <button class="quick-card" data-view="profile" type="button">
+            <span class="menu-icon">⚙</span>
+            <span><strong>个人档案与 TDEE</strong><small>1RM、体脂与目标</small></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="view" id="view-profile">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>个人与热量</h2>
+          <p class="hint">改动会自动保存，并同步到你的账号。</p>
+        </div>
+        <div class="profile-grid">
+          <h3 class="profile-subhead">身体数据</h3>
+          <label class="field">
+            <span>性别</span>
+            <select id="profileGender">
+              <option value="male">男</option>
+              <option value="female">女</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>年龄（岁）</span>
+            <input type="number" id="profileAge" step="1" min="10" max="100" placeholder="可选">
+          </label>
+          <label class="field">
+            <span>身高（cm）</span>
+            <input type="number" id="profileHeight" step="0.5" min="120" max="230" placeholder="例如 175">
+          </label>
+          <label class="field">
+            <span>体重（kg）</span>
+            <input type="number" id="profileWeight" step="0.1" min="30" max="250" placeholder="78.5">
+          </label>
+          <label class="field">
+            <span>腰围（cm）</span>
+            <input type="number" id="profileWaist" step="0.5" min="40" max="180" placeholder="例如 82">
+          </label>
+          <label class="field">
+            <span>颈围（cm）</span>
+            <input type="number" id="profileNeck" step="0.5" min="20" max="80" placeholder="例如 38">
+          </label>
+          <label class="field" id="hipWrap" hidden>
+            <span>臀围（cm）</span>
+            <input type="number" id="profileHip" step="0.5" min="50" max="180" placeholder="女性填写">
+          </label>
+          <h3 class="profile-subhead">训练与活动</h3>
+          <label class="field">
+            <span>深蹲 1RM（kg）</span>
+            <input type="number" id="profileSquat" step="0.5" min="0" placeholder="可选">
+          </label>
+          <label class="field">
+            <span>卧推 1RM（kg）</span>
+            <input type="number" id="profileBench" step="0.5" min="0" placeholder="可选">
+          </label>
+          <label class="field">
+            <span>硬拉 1RM（kg）</span>
+            <input type="number" id="profileDeadlift" step="0.5" min="0" placeholder="可选">
+          </label>
+          <label class="field">
+            <span>推举 1RM（kg）</span>
+            <input type="number" id="profilePress" step="0.5" min="0" placeholder="可选">
+          </label>
+          <label class="field">
+            <span>日常活动</span>
+            <select id="profileActivity">
+              <option value="sedentary">久坐 · 步数低</option>
+              <option value="light">轻度活跃 · 周训 1-3</option>
+              <option value="moderate">中度活跃 · 周训 3-5</option>
+              <option value="active">高度活跃 · 高强度大容量</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>当前目标</span>
+            <select id="profileGoal">
+              <option value="mild-fat-loss">温和减脂</option>
+              <option value="aggressive-fat-loss">激进减脂</option>
+              <option value="maintain">维持体重</option>
+              <option value="lean-bulk">增肌</option>
+            </select>
+          </label>
+          <h3 class="profile-subhead">每日目标</h3>
+          <label class="field">
+            <span>手动热量目标（kcal）</span>
+            <input type="number" id="profileCalories" step="10" min="800" max="5000" placeholder="1850">
+          </label>
+          <label class="field">
+            <span>手动蛋白质目标（g）</span>
+            <input type="number" id="profileProtein" step="5" min="0" placeholder="145">
+          </label>
+        </div>
+        <div class="nutrition-summary" id="nutritionResult"></div>
+        <div class="nutrition-actions">
+          <button class="btn ghost" id="applyNutrition" type="button" disabled>套用推荐目标</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="view" id="view-plan">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>12 周训练计划</h2>
+          <p class="hint">训练日可点“编辑动作”从动作库选择，或直接增删和改组次。</p>
+          <button class="btn ghost" id="openLogPlan" type="button">记录本次训练</button>
+          <button class="btn ghost" id="printPlan" type="button">打印计划</button>
+        </div>
+        <div class="week-picker">
+          <label class="field">
+            <span>训练周</span>
+            <select id="weekSelect"></select>
+          </label>
+          <div class="phase-banner" id="phaseBanner"></div>
+        </div>
+        <div class="week-grid" id="weekGrid"></div>
+      </section>
+    </div>
+
+    <div class="view" id="view-training">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>训练记录</h2>
+          <button class="btn" id="openLog" type="button">记录本次训练</button>
+        </div>
+        <div class="log-list" id="trainingLogs"></div>
+      </section>
+    </div>
+
+    <div class="view" id="view-weight">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>体重记录</h2>
+        </div>
+        <div class="weight-form">
+          <label class="field"><span>日期</span><input type="date" id="weightDate"></label>
+          <label class="field"><span>体重（kg）</span><input type="number" id="weightValue" step="0.1" min="30" max="250" placeholder="78.5"></label>
+          <label class="field"><span>备注</span><input type="text" id="weightNote" placeholder="晨起空腹 / 训练后等"></label>
+          <button class="btn" id="saveWeight" type="button">保存体重</button>
+        </div>
+        <div class="weight-trend" id="weightTrend"></div>
+        <div class="weight-list" id="weightList"></div>
+        <div class="weekly-check" id="weeklyCheck"></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="modal" id="exerciseModal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modalTitle">编辑动作</h3>
+        <button class="icon-btn" id="closeModal" type="button" aria-label="关闭">×</button>
+      </div>
+      <div class="modal-day-name" id="modalDayName"></div>
+      <div class="selected-head">
+        <span>已选动作</span>
+        <button class="link-btn" id="loadTemplate" type="button">载入推荐动作</button>
+      </div>
+      <div class="selected-list" id="selectedExercises"></div>
+      <div class="search-row">
+        <input type="search" id="exerciseSearch" placeholder="搜索动作，例如 深蹲 / squat">
+      </div>
+      <div class="library-grid" id="exerciseGrid"></div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="cancelModal" type="button">取消</button>
+        <button class="btn" id="saveExercises" type="button">保存动作</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="logModal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>记录训练</h3>
+        <button class="icon-btn" id="closeLogModal" type="button" aria-label="关闭">×</button>
+      </div>
+      <div class="log-form-grid">
+        <label class="field"><span>日期</span><input type="date" id="logDate"></label>
+        <label class="field"><span>星期</span><select id="logDay"></select></label>
+      </div>
+      <div class="selected-head"><span>实际完成</span></div>
+      <div class="log-exercise-list" id="logExerciseRows"></div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="cancelLogModal" type="button">取消</button>
+        <button class="btn" id="saveLog" type="button">保存训练记录</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav" id="bottomNav" aria-label="手机菜单">
+    <button type="button" data-nav="home" class="active">首页</button>
+    <button type="button" data-nav="profile">资料</button>
+    <button type="button" data-nav="plan">计划</button>
+    <button type="button" data-nav="training">记录</button>
+    <button type="button" data-nav="weight">体重</button>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase-config.js?v=20260903j"></script>
+  <script src="assets/exercise-library.js?v=20260903j"></script>
+  <script src="app.js?v=20260903j"></script>
+</body>
+</html>

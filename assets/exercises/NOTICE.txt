@@ -1,0 +1,5 @@
+动作动画与图片素材整理自 Exercises Dataset。
+
+媒体 © Gym visual — https://gymvisual.com/
+
+数据源：https://github.com/hasaneyldrm/exercises-dataset

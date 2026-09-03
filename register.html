@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>注册 ironboulder</title>
+  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903j">
+  <link rel="stylesheet" href="styles.css?v=20260903j">
+</head>
+<body>
+  <div class="auth-screen">
+    <form class="auth-card" id="registerForm" novalidate>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903j" alt="ironboulder"></span>
+      <h2>注册 ironboulder</h2>
+      <p>不需要设置密码，注册登录链接会发送到你的邮箱</p>
+      <label class="field">
+        <span>邮箱</span>
+        <input type="email" id="registerEmail" name="email" autocomplete="email" placeholder="you@example.com">
+      </label>
+      <div class="auth-actions single">
+        <button class="btn" id="sendRegister" type="submit">发送注册链接</button>
+      </div>
+      <button class="link-btn auth-toggle" id="goLogin" type="button">已有账号？去登录</button>
+      <p class="auth-message" id="registerMessage"></p>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase-config.js?v=20260903j"></script>
+  <script>
+    'use strict';
+
+    const MAIN_FILE = 'fitness-climbing-strength-20260903.html';
+    const emailInput = document.getElementById('registerEmail');
+    const message = document.getElementById('registerMessage');
+    const sendButton = document.getElementById('sendRegister');
+    const form = document.getElementById('registerForm');
+    let authClient = null;
+
+    function setMessage(text) {
+      message.textContent = text || '';
+    }
+
+    function validEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    }
+
+    function appUrl() {
+      if (location.protocol === 'file:') return '';
+      const url = new URL(MAIN_FILE, location.href);
+      url.hash = '';
+      url.search = '';
+      return url.href;
+    }
+
+    async function sendRegisterLink(client) {
+      if (!client) {
+        setMessage('云端配置未加载，请稍后重试');
+        return;
+      }
+      const email = emailInput.value.trim();
+      if (!validEmail(email)) {
+        setMessage('请输入有效的邮箱地址');
+        emailInput.focus();
+        return;
+      }
+      const redirectTo = appUrl();
+      if (!redirectTo) {
+        setMessage('请通过网页地址打开注册页，邮件里的登录链接才能带你回到应用');
+        return;
+      }
+
+      setMessage('正在发送注册链接…');
+      sendButton.disabled = true;
+      const { error } = await client.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: redirectTo
+        }
+      });
+      sendButton.disabled = false;
+
+      if (error) {
+        if (/rate limit|too many|security purposes/i.test(error.message)) {
+          setMessage('发送太频繁，请 1 分钟后再试');
+        } else if (/signups not allowed/i.test(error.message)) {
+          setMessage('项目未开启邮箱注册，请先在 Supabase 里启用 Email 登录');
+        } else if (/redirect/i.test(error.message)) {
+          setMessage('当前网页地址还没加入 Supabase 回调白名单，请到 Authentication 的 URL Configuration 添加');
+        } else {
+          setMessage(error.message);
+        }
+        return;
+      }
+
+      sendButton.textContent = '重新发送';
+      setMessage('注册链接已发送到 ' + email + '，点开邮件里的链接即可登录');
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+    });
+    sendButton.addEventListener('click', () => sendRegisterLink(authClient));
+    document.getElementById('goLogin').addEventListener('click', () => {
+      window.location.href = MAIN_FILE;
+    });
+
+    (async () => {
+      const cfg = window.SUPABASE_CONFIG || {};
+      if (!cfg.url || !cfg.anonKey || !window.supabase) {
+        setMessage('云端配置未加载，请稍后重试');
+        return;
+      }
+      authClient = window.supabase.createClient(cfg.url, cfg.anonKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
+      });
+      const { data } = await authClient.auth.getSession();
+      if (data.session) {
+        window.location.replace(MAIN_FILE);
+      }
+    })();
+  </script>
+</body>
+</html>
