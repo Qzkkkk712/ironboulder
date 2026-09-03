@@ -204,6 +204,8 @@ function showView(name) {
   document.querySelectorAll('#bottomNav button').forEach((button) => {
     button.classList.toggle('active', button.dataset.nav === name);
   });
+  const bottomNav = $('#bottomNav');
+  if (bottomNav) bottomNav.hidden = name === 'home';
   $('#backHome').hidden = name === 'home';
 }
 
@@ -1027,26 +1029,26 @@ function renderDashboard() {
     weightEl.textContent = trend.weight > 0 ? trend.weight.toFixed(1) + ' kg' : '--';
   }
   const changeEl = $('#homeWeightChange');
-  const wrap = $('#homeChangeWrap');
   const labelEl = $('#homeChangeLabel');
-  if (changeEl && wrap) {
+  if (changeEl && labelEl) {
     if (trend.delta === null) {
       changeEl.textContent = '--';
-      wrap.className = 'change-cell';
+      labelEl.textContent = '近期变化';
     } else {
       const text = trend.delta > 0.049 ? '+' + trend.delta.toFixed(1) : trend.delta < -0.049 ? trend.delta.toFixed(1) : '±0.0';
       changeEl.textContent = text + ' kg';
       labelEl.textContent = trend.label || '较上次';
-      const losing = trend.delta < -0.049;
-      const gaining = trend.delta > 0.049;
-      const good = (state.profile.goal || '').indexOf('fat') !== -1 ? losing : (state.profile.goal === 'lean-bulk' ? gaining : !gaining && !losing);
-      wrap.className = 'change-cell ' + (good ? 'is-good' : gaining || losing ? 'is-warn' : '');
     }
   }
 
   const macros = currentMacroSplit();
   $('#macroTarget').textContent = formatNumber(macros.target) + ' kcal';
   $('#macroProtein').textContent = macros.protein + ' g';
+  const proteinHint = $('#macroProteinHint');
+  if (proteinHint) {
+    const currentWeight = numValue(state.profile.weight);
+    proteinHint.textContent = currentWeight > 0 ? (macros.protein / currentWeight).toFixed(1) + ' g/kg' : '--';
+  }
   $('#macroCarbs').textContent = macros.carbs + ' g';
   $('#macroFat').textContent = macros.fat + ' g';
   const tdeeEl = $('#macroTdee');
@@ -1493,7 +1495,7 @@ function bindEvents() {
   $('#authLogout').addEventListener('click', signOutSupabase);
   $('#mobileView').addEventListener('click', () => {
     const mobile = document.body.classList.toggle('mobile-mode');
-    $('#mobileView').textContent = mobile ? '电脑版' : '手机版';
+    $('#mobileView').setAttribute('aria-label', mobile ? '电脑版' : '手机版');
     showView(currentView);
   });
 
@@ -1732,7 +1734,7 @@ bindEvents();
 renderAll();
 if (/Mobi|Android|iPhone|iPad|Phone/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 0 && window.innerWidth < 1000)) {
   document.body.classList.add('mobile-mode');
-  $('#mobileView').textContent = '电脑版';
+  $('#mobileView').setAttribute('aria-label', '电脑版');
 }
 
 (async () => {

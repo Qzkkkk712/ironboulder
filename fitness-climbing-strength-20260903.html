@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>ironboulder</title>
-  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903o">
-  <link rel="stylesheet" href="styles.css?v=20260903o">
+  <link rel="icon" href="assets/icons/ironboulder.jpeg?v=20260903p">
+  <link rel="stylesheet" href="styles.css?v=20260903p">
 </head>
 <body>
   <div class="auth-screen" id="authScreen" hidden>
     <form class="auth-card" id="authForm" autocomplete="on" novalidate>
-      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903o" alt="ironboulder"></span>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903p" alt="ironboulder"></span>
       <h2>ironboulder</h2>
       <p id="authSubtitle">使用邮箱和密码登录</p>
       <label class="field">
@@ -35,7 +35,7 @@
 
   <div class="auth-screen onboarding-screen" id="onboardingScreen" hidden>
     <form class="auth-card onboarding-card" id="onboardingForm" novalidate>
-      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903o" alt="ironboulder"></span>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903p" alt="ironboulder"></span>
       <h2>完善个人档案</h2>
       <p>首次使用需要先填写基础资料，才能进入主页。</p>
       <div class="profile-grid onboarding-grid">
@@ -85,90 +85,98 @@
   <header class="topbar">
     <div class="brand">
       <button class="back-btn" id="backHome" type="button" hidden>‹</button>
-      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903o" alt="ironboulder"></span>
+      <span class="brand-mark brand-image"><img src="assets/icons/ironboulder.jpeg?v=20260903p" alt="ironboulder"></span>
       <div>
         <h1>ironboulder</h1>
-        <p class="sync-line" id="syncStatus">本机保存</p>
+        <p class="sync-line"><i aria-hidden="true"></i><span id="syncStatus">本机保存</span></p>
       </div>
     </div>
     <div class="topbar-actions">
-      <button class="btn ghost" id="syncNow" type="button">同步</button>
-      <button class="btn ghost" id="mobileView" type="button">手机版</button>
-      <button class="btn ghost" id="authLogout" type="button" hidden>退出</button>
+      <button class="icon-action" id="syncNow" type="button" aria-label="同步">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-3M4 13a8 8 0 0 0 14.9 3M20 4v4h-4M4 20v-4h4"/></svg>
+      </button>
+      <button class="icon-action" id="mobileView" type="button" aria-label="手机版">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8v20H8zM11 18h2"/></svg>
+      </button>
+      <button class="icon-action" id="authLogout" type="button" aria-label="退出" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4v16h6M14 8l4 4-4 4M18 12H9"/></svg>
+      </button>
     </div>
   </header>
 
   <main>
-    <div class="view active" id="view-home">
-      <section class="status-card">
-        <div class="status-tags">
+    <div class="view active home-view" id="view-home">
+      <button class="hero-action" id="startToday" type="button">
+        <span class="hero-copy">
+          <small>今日训练入口</small>
+          <strong>开始今天的训练</strong>
+          <em id="startTodayHint">记录本次实际训练</em>
+        </span>
+        <span class="hero-arrow" aria-hidden="true">→</span>
+      </button>
+
+      <section class="metrics-dashboard">
+        <div class="metrics-tags">
           <span class="goal-pill" id="homeGoalTag">--</span>
           <span class="phase-pill" id="homePhaseTag">--</span>
           <span class="phase-pill" id="homeBmi" hidden>BMI --</span>
         </div>
-        <div class="status-numbers">
-          <div>
+        <div class="metrics-top">
+          <div class="weight-block">
             <span>当前体重</span>
             <strong id="homeWeight">--</strong>
+            <small id="homeChangeLabel">近期变化</small>
+            <em id="homeWeightChange">--</em>
           </div>
-          <div class="change-cell" id="homeChangeWrap">
-            <span id="homeChangeLabel">近期变化</span>
-            <strong id="homeWeightChange">--</strong>
-          </div>
-        </div>
-      </section>
-
-      <section class="macro-board">
-        <div class="macro-head">
-          <div class="target-calories">
-            <span>每日热量预算</span>
+          <div class="calorie-block">
+            <span>每日摄入预算</span>
             <strong id="macroTarget">--</strong>
-          </div>
-          <div class="tdee-cell">
-            <span>预估 TDEE</span>
-            <strong id="macroTdee">--</strong>
-            <small id="macroDelta">--</small>
+            <small>TDEE <em id="macroTdee">--</em></small>
+            <em class="budget-delta" id="macroDelta">--</em>
           </div>
         </div>
-        <div class="macro-list">
-          <div class="macro-row" data-macro="protein">
-            <span>蛋白质</span>
+        <div class="metrics-divider"></div>
+        <div class="macro-goals">
+          <div>
+            <span>蛋白质目标</span>
             <strong id="macroProtein">--</strong>
-            <div class="track"><i></i></div>
+            <small id="macroProteinHint">--</small>
           </div>
-          <div class="macro-row" data-macro="carbs">
-            <span>碳水</span>
+          <div>
+            <span>碳水目标</span>
             <strong id="macroCarbs">--</strong>
-            <div class="track"><i></i></div>
+            <small>每日推荐克数</small>
           </div>
-          <div class="macro-row" data-macro="fat">
-            <span>脂肪</span>
+          <div>
+            <span>脂肪上限</span>
             <strong id="macroFat">--</strong>
-            <div class="track"><i></i></div>
+            <small>每日推荐克数</small>
           </div>
         </div>
       </section>
 
-      <div class="home-actions">
-        <button class="start-action" id="startToday" type="button">
-          <span class="start-icon">▶</span>
-          <span><strong>开始今天的训练</strong><small id="startTodayHint">记录本次实际训练</small></span>
+      <nav class="action-grid" aria-label="功能导航">
+        <button class="action-card" data-view="plan" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v17H5zM8 2v4M16 2v4M5 10h14"/></svg>
+          <strong>12 周计划</strong>
+          <small>周期与动作编排</small>
         </button>
-        <div class="quick-grid">
-          <button class="quick-card" id="quickWeight" type="button">
-            <span class="menu-icon">⚖</span>
-            <span><strong>记录体重</strong><small>体重与近期趋势</small></span>
-          </button>
-          <button class="quick-card" data-view="plan" type="button">
-            <span class="menu-icon">📅</span>
-            <span><strong>训练计划与记录</strong><small>12 周动作与 RPE</small></span>
-          </button>
-          <button class="quick-card" data-view="profile" type="button">
-            <span class="menu-icon">⚙</span>
-            <span><strong>个人档案与 TDEE</strong><small>1RM、体脂与目标</small></span>
-          </button>
-        </div>
-      </div>
+        <button class="action-card" data-view="training" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18H7zM9.5 8h5M9.5 12h5M9.5 16h3"/></svg>
+          <strong>训练记录</strong>
+          <small>重量与 RPE</small>
+        </button>
+        <button class="action-card" id="quickWeight" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16l-2 12H6L4 8zM3 8h18M10 8h4l1-3H9l1 3"/></svg>
+          <strong>体重与腰围</strong>
+          <small>记录最新身体数据</small>
+        </button>
+        <button class="action-card" data-view="profile" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l3-2-2-3-3 1a7 7 0 0 0-2-1L14 2h-4l-.8 4a7 7 0 0 0-2 1l-3-1-2 3 3 2a7 7 0 0 0 0 2l-3 2 2 3 3-1a7 7 0 0 0 2 1l.8 4h4l.8-4a7 7 0 0 0 2-1l3 1 2-3-3-2a7 7 0 0 0 .1-1z"/></svg>
+          <strong>档案与热量</strong>
+          <small>TDEE 与目标重算</small>
+        </button>
+      </nav>
     </div>
 
     <div class="view" id="view-profile">
@@ -364,7 +372,7 @@
     </div>
   </div>
 
-  <nav class="bottom-nav" id="bottomNav" aria-label="手机菜单">
+  <nav class="bottom-nav" id="bottomNav" aria-label="手机菜单" hidden>
     <button type="button" data-nav="home" class="active">首页</button>
     <button type="button" data-nav="profile">资料</button>
     <button type="button" data-nav="plan">计划</button>
@@ -373,8 +381,8 @@
   </nav>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/supabase-config.js?v=20260903o"></script>
-  <script src="assets/exercise-library.js?v=20260903o"></script>
-  <script src="app.js?v=20260903o"></script>
+  <script src="assets/supabase-config.js?v=20260903p"></script>
+  <script src="assets/exercise-library.js?v=20260903p"></script>
+  <script src="app.js?v=20260903p"></script>
 </body>
 </html>
