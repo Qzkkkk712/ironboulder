@@ -579,6 +579,7 @@ async function loadCloudState() {
       state = cached;
       localStorage.setItem(key, JSON.stringify(state));
       renderAll();
+      ensureOnboarding();
     }
     $('#syncStatus').textContent = '云端读取失败';
     return;
@@ -640,6 +641,7 @@ async function syncCloud(manual) {
       state = normalizeSyncedState(data.state);
       localStorage.setItem(storageKey(), JSON.stringify(state));
       renderAll();
+      ensureOnboarding();
     } else {
       state.updatedAt = new Date().toISOString();
       const { error } = await supabaseClient
